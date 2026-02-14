@@ -234,8 +234,11 @@ if [[ "$RUN_REBUILD" =~ ^[Yy]$ ]]; then
     --option fallback false
   )
 else
-  log "步骤 3/3: 执行标准 rebuild（含 -L 日志）"
-  REBUILD_ARGS=(switch --flake "$FLAKE_REF" -L)
+  log "步骤 3/3: 执行标准 rebuild（含 -L 日志，max-jobs=1）"
+  REBUILD_ARGS=(
+    switch --flake "$FLAKE_REF" -L
+    --option max-jobs 1
+  )
 fi
 
 # 如果选择强制使用官方缓存,追加 substituters 参数
@@ -245,7 +248,11 @@ if [[ "$USE_OFFICIAL_CACHE" =~ ^[Yy]$ ]]; then
 fi
 
 set +e
-sudo nixos-rebuild "${REBUILD_ARGS[@]}"
+if [[ "$TTY_AVAILABLE" -eq 1 ]]; then
+  sudo nixos-rebuild --verbose "${REBUILD_ARGS[@]}" <&${TTY_FD}
+else
+  sudo nixos-rebuild --verbose "${REBUILD_ARGS[@]}"
+fi
 REBUILD_RC=$?
 set -e
 
