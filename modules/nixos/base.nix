@@ -86,6 +86,7 @@
     rust-analyzer
     python3
     uv
+    bun
     lsof
     strace
     iotop-c
@@ -97,6 +98,47 @@
     zoxide
     fastfetch
   ];
+
+  services.nginx = {
+    enable = true;
+    recommendedGzipSettings = true;
+    recommendedOptimisation = true;
+    recommendedProxySettings = true;
+    recommendedTlsSettings = true;
+    virtualHosts."default" = {
+      default = true;
+      locations."/" = {
+        return = "200 'nginx is running\\n'";
+        extraConfig = "add_header Content-Type text/plain;";
+      };
+    };
+  };
+
+  networking.firewall.allowedTCPPorts = [ 80 ];
+
+  # Install CLI agents via bun during nixos-rebuild activation.
+  system.activationScripts.bunGlobalAgents.text = ''
+    set -euo pipefail
+
+    mkdir -p /var/lib/bun-global /var/lib/bun-cache /usr/local/bin
+
+    export BUN_INSTALL=/var/lib/bun-global
+    export BUN_INSTALL_CACHE_DIR=/var/lib/bun-cache
+
+    ${pkgs.bun}/bin/bun add -g @anthropic-ai/claude-code @qwen-code/qwen-code
+
+    ln -sf /var/lib/bun-global/bin/claude /usr/local/bin/claude
+    if [ -x /var/lib/bun-global/bin/qwen ]; then
+      ln -sf /var/lib/bun-global/bin/qwen /usr/local/bin/qwen
+      ln -sf /var/lib/bun-global/bin/qwen /usr/local/bin/qwen-code
+    elif [ -x /var/lib/bun-global/bin/qwen-code ]; then
+      ln -sf /var/lib/bun-global/bin/qwen-code /usr/local/bin/qwen
+      ln -sf /var/lib/bun-global/bin/qwen-code /usr/local/bin/qwen-code
+    else
+      echo "qwen executable not found in /var/lib/bun-global/bin" >&2
+      exit 1
+    fi
+  '';
 
   zramSwap = {
     enable = true;
