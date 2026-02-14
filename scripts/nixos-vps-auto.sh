@@ -238,6 +238,7 @@ else
   REBUILD_ARGS=(
     switch --flake "$FLAKE_REF" -L
     --option max-jobs 1
+    --option cores 1
   )
 fi
 
