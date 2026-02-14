@@ -219,7 +219,7 @@ else
   HW_CONFIG_GENERATED=true
 fi
 
-RUN_REBUILD="$(prompt_yes_no "使用低内存参数执行 nixos-rebuild 吗？[y/N]（选 N 也会执行标准 rebuild）: " "N")"
+RUN_REBUILD="$(prompt_yes_no "使用低内存参数执行 nixos-rebuild 吗？[Y/n]（默认可构建模式）: " "Y")"
 USE_OFFICIAL_CACHE="$(prompt_yes_no "是否强制只使用官方缓存(cache.nixos.org)？[y/N]: " "N")"
 
 REBUILD_ARGS=()

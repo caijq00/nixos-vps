@@ -88,6 +88,16 @@
     registry = "sparse+https://mirrors.tuna.tsinghua.edu.cn/crates.io-index/"
   '';
 
+  home.file.".npmrc".text = ''
+    registry=https://registry.npmmirror.com/
+  '';
+
+  home.file.".config/uv/uv.toml".text = ''
+    [[index]]
+    url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+    default = true
+  '';
+
   home.packages = with pkgs; [
     unzip
     zip

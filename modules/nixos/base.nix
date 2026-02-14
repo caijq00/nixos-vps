@@ -19,11 +19,9 @@
     settings = {
       experimental-features = [ "nix-command" "flakes" ];
       auto-optimise-store = true;
-      # 完全禁止本地编译(max-jobs = 0)
-      # 警告: 这会禁止任何本地构建,包括系统配置组装
-      # 如果缓存未命中会直接失败,确保所有包都有二进制缓存
-      # 若 rebuild 报错 "Unable to start any build",改为 max-jobs = 1
-      max-jobs = 0;
+      # 低内存机器建议最少保留 1 个本地构建任务
+      # 可避免缓存未命中时因无法本地构建而直接失败
+      max-jobs = 1;
       cores = 1;
       fallback = false;
       trusted-users = [ "root" "@wheel" ];
