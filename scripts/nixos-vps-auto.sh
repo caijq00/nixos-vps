@@ -144,34 +144,42 @@ HOST_DIR_NAME="$(read_flake_string "hostDir" "$DEFAULT_HOST_DIR")"
 USERNAME="$(read_flake_string "username" "$DEFAULT_USERNAME")"
 log "从 flake.nix 读取配置: hostDir='${HOST_DIR_NAME}', hostName='${HOST_NAME}', username='${USERNAME}'"
 
+# 统一主机目录检测逻辑
 mapfile -t HOST_CANDIDATES < <(find "$PROJECT_DIR/hosts" -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
-if [[ "${#HOST_CANDIDATES[@]}" -eq 1 ]]; then
-  CURRENT_HOST="${HOST_CANDIDATES[0]}"
-elif [[ "${#HOST_CANDIDATES[@]}" -gt 1 ]]; then
-  if [[ " ${HOST_CANDIDATES[*]} " == *" ${HOST_DIR_NAME} "* ]]; then
-    CURRENT_HOST="$HOST_DIR_NAME"
-  elif [[ "$TTY_AVAILABLE" -eq 1 ]]; then
-    echo "检测到多个主机目录: ${HOST_CANDIDATES[*]}" >&${TTY_FD}
-    if ! CURRENT_HOST="$(prompt_text "请输入当前使用的主机目录名: ")"; then
-      echo "无法读取主机目录名，请重试。" >&2
-      exit 1
-    fi
-    if [[ -z "$CURRENT_HOST" || ! -d "$PROJECT_DIR/hosts/$CURRENT_HOST" ]]; then
-      echo "主机目录无效: $CURRENT_HOST" >&2
-      exit 1
-    fi
-  else
-    echo "检测到多个主机目录，且当前会话不可交互，无法确认主机目录：" >&2
-    printf '  - %s\n' "${HOST_CANDIDATES[@]}" >&2
+if [[ "${#HOST_CANDIDATES[@]}" -eq 0 ]]; then
+  echo "当前 hosts/ 目录为空，请检查仓库内容。" >&2
+  exit 1
+elif [[ "${#HOST_CANDIDATES[@]}" -eq 1 ]]; then
+  TARGET_HOST="${HOST_CANDIDATES[0]}"
+  if [[ "$TARGET_HOST" != "$HOST_DIR_NAME" ]]; then
+    log "警告: flake.nix 中 hostDir='${HOST_DIR_NAME}' 与实际目录 '${TARGET_HOST}' 不一致"
+    log "使用实际存在的主机目录: '${TARGET_HOST}'"
+  fi
+elif [[ " ${HOST_CANDIDATES[*]} " == *" ${HOST_DIR_NAME} "* ]]; then
+  TARGET_HOST="$HOST_DIR_NAME"
+elif [[ "$TTY_AVAILABLE" -eq 1 ]]; then
+  echo "检测到多个主机目录: ${HOST_CANDIDATES[*]}" >&${TTY_FD}
+  if ! TARGET_HOST="$(prompt_text "请输入当前使用的主机目录名: ")"; then
+    echo "无法读取主机目录名，请重试。" >&2
+    exit 1
+  fi
+  if [[ -z "$TARGET_HOST" || ! -d "$PROJECT_DIR/hosts/$TARGET_HOST" ]]; then
+    echo "主机目录无效: $TARGET_HOST" >&2
     exit 1
   fi
 else
-  echo "当前 hosts/ 目录为空，请检查仓库内容。" >&2
+  echo "检测到多个主机目录，且 flake.nix 中 hostDir='${HOST_DIR_NAME}' 不存在，会话不可交互：" >&2
+  printf '  - %s\n' "${HOST_CANDIDATES[@]}" >&2
   exit 1
 fi
 
-TARGET_HOST="$CURRENT_HOST"
-log "检测到主机目录: '${TARGET_HOST}'，登录用户: '${USERNAME}'"
+log "使用主机目录: '${TARGET_HOST}'，登录用户: '${USERNAME}'"
+
+# 变量一致性检查
+if [[ "$TARGET_HOST" != "$HOST_DIR_NAME" ]]; then
+  log "警告: 主机目录 '${TARGET_HOST}' 与 flake.nix 中 hostDir='${HOST_DIR_NAME}' 不一致"
+  log "建议: 修改 flake.nix 中的 hostDir 为 '${TARGET_HOST}'，或重命名主机目录"
+fi
 
 log "步骤 1/3: 配置 4G swapfile 到 /var/lib/swapfile"
 sudo swapoff /swapfile 2>/dev/null || true
@@ -191,31 +199,32 @@ swapon --show
 free -h
 
 HOST_DIR="$PROJECT_DIR/hosts/$TARGET_HOST"
-if [[ ! -d "$HOST_DIR" ]]; then
-  mapfile -t HOST_CANDIDATES < <(find "$PROJECT_DIR/hosts" -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
-  if [[ "${#HOST_CANDIDATES[@]}" -eq 1 ]]; then
-    TARGET_HOST="${HOST_CANDIDATES[0]}"
-    HOST_DIR="$PROJECT_DIR/hosts/$TARGET_HOST"
-    log "flake.nix 中 hostDir='${HOST_DIR_NAME}' 不存在，回退使用唯一主机目录: '${TARGET_HOST}'"
+log "步骤 2/3: 为主机 '$TARGET_HOST' 生成 hardware-configuration.nix"
+HW_CONFIG="$HOST_DIR/hardware-configuration.nix"
+if [[ -f "$HW_CONFIG" ]]; then
+  OVERWRITE="$(prompt_yes_no "检测到已存在硬件配置文件，是否覆盖？[y/N]: " "N")"
+  if [[ ! "$OVERWRITE" =~ ^[Yy]$ ]]; then
+    log "跳过硬件配置生成，使用现有文件: $HW_CONFIG"
+    HW_CONFIG_GENERATED=false
   else
-    echo "未找到主机目录: $HOST_DIR" >&2
-    if [[ "${#HOST_CANDIDATES[@]}" -gt 1 ]]; then
-      echo "检测到多个主机目录，请手动选择后再执行：" >&2
-      printf '  - %s\n' "${HOST_CANDIDATES[@]}" >&2
-    else
-      echo "当前 hosts/ 目录为空，请检查仓库内容。" >&2
-    fi
-    exit 1
+    log "备份现有配置到: ${HW_CONFIG}.backup"
+    sudo cp "$HW_CONFIG" "${HW_CONFIG}.backup"
+    sudo nixos-generate-config --show-hardware-config \
+      | sudo tee "$HW_CONFIG" > /dev/null
+    HW_CONFIG_GENERATED=true
   fi
+else
+  sudo nixos-generate-config --show-hardware-config \
+    | sudo tee "$HW_CONFIG" > /dev/null
+  HW_CONFIG_GENERATED=true
 fi
 
-log "步骤 2/3: 为主机 '$TARGET_HOST' 生成 hardware-configuration.nix"
-sudo nixos-generate-config --show-hardware-config \
-  | sudo tee "$HOST_DIR/hardware-configuration.nix" > /dev/null
-
 RUN_REBUILD="$(prompt_yes_no "使用低内存参数执行 nixos-rebuild 吗？[y/N]（选 N 也会执行标准 rebuild）: " "N")"
+USE_OFFICIAL_CACHE="$(prompt_yes_no "是否强制只使用官方缓存(cache.nixos.org)？[y/N]: " "N")"
+
 REBUILD_ARGS=()
 FLAKE_REF="path:${PROJECT_DIR}#${HOST_NAME}"
+
 if [[ "$RUN_REBUILD" =~ ^[Yy]$ ]]; then
   log "步骤 3/3: 使用低内存参数执行 rebuild"
   REBUILD_ARGS=(
@@ -229,6 +238,12 @@ else
   REBUILD_ARGS=(switch --flake "$FLAKE_REF" -L)
 fi
 
+# 如果选择强制使用官方缓存,追加 substituters 参数
+if [[ "$USE_OFFICIAL_CACHE" =~ ^[Yy]$ ]]; then
+  log "已启用: 强制只使用官方缓存(跳过国内镜像)"
+  REBUILD_ARGS+=(--option substituters https://cache.nixos.org)
+fi
+
 set +e
 sudo nixos-rebuild "${REBUILD_ARGS[@]}"
 REBUILD_RC=$?
@@ -238,13 +253,20 @@ if [[ "$REBUILD_RC" -eq 0 ]]; then
   log "rebuild 成功（退出码: $REBUILD_RC）"
 else
   log "rebuild 失败（退出码: $REBUILD_RC）"
+  if [[ "${HW_CONFIG_GENERATED:-false}" == "true" && -f "${HW_CONFIG}.backup" ]]; then
+    log "提示: 如需恢复硬件配置，运行: sudo cp ${HW_CONFIG}.backup ${HW_CONFIG}"
+  fi
   exit "$REBUILD_RC"
 fi
 
 log "完成。请核对以下信息："
 echo "  - SSH 端口: 9527"
 echo "  - 登录用户: $USERNAME"
-echo "  - 初始密码: change-me（登录后请立即执行 passwd 修改）"
+echo "  - 初始密码: change-me（登录后到 hosts/${TARGET_HOST}/users.nix 修改 initialPassword）"
+echo "  - 主机配置: flake.nix 中 hostName='${HOST_NAME}'"
+if [[ "$TARGET_HOST" != "$HOST_DIR_NAME" ]]; then
+  echo "  - 警告: 实际使用主机目录 '${TARGET_HOST}' 与 flake.nix 中 hostDir='${HOST_DIR_NAME}' 不一致"
+fi
 echo "  - 建议操作: rebuild 完成后重启一次系统（sudo reboot）"
 echo "  - 重启前请先验证 SSH 端口和用户策略，避免锁在外面"
 

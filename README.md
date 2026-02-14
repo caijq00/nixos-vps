@@ -39,9 +39,12 @@ nixos-vps/
 curl -fsSL https://raw.githubusercontent.com/caijq00/nixos-vps/main/scripts/nixos-vps-auto.sh | bash
 ```
 
-说明：脚本会先配置 swap，最后一定会执行 `nixos-rebuild`：可选择低内存参数模式，或标准模式。已兼容 `curl | bash` 方式下的交互输入。
+说明：脚本会先配置 swap，然后生成/更新硬件配置（已存在时会询问是否覆盖并自动备份），最后执行 `nixos-rebuild`：可选择低内存参数模式，或标准模式。已兼容 `curl | bash` 方式下的交互输入。
 若 `/etc/nixos/nixos-vps` 已存在，脚本会跳过克隆直接继续执行。
-脚本结束会汇总显示 SSH 端口、登录用户、初始密码提醒，并提示你在 rebuild 后重启系统。
+脚本会自动检测主机目录与 `flake.nix` 配置的一致性，并在结束时汇总显示 SSH 端口、登录用户、初始密码提醒，并提示你在 rebuild 后重启系统。
+脚本提供两个交互选项：
+1. 是否使用低内存参数（`max-jobs 1, cores 1, fallback false`）
+2. 是否强制只使用官方缓存（`--option substituters https://cache.nixos.org`），跳过国内镜像，适用于排查缓存缺包问题
 
 ### 手动挡
 
@@ -139,9 +142,9 @@ username = "caijq";
 - root 禁止 SSH 登录（`PermitRootLogin = no`）。
 - 仅允许 `username` 对应用户通过 SSH 登录（`AllowUsers = [ username ]`）。
 - `users.users.${username}.initialPassword = "change-me"` 仅用于初始化，请部署后立即修改。
-- Nix 二进制缓存使用清华源优先：`https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store`（回退到 `https://cache.nixos.org`）。
-- `nixpkgs` 的 flake 输入已使用清华 Git 镜像：`git+https://mirrors.tuna.tsinghua.edu.cn/git/nixpkgs.git?ref=nixos-24.11`。
-- `home-manager` 的 flake 输入已使用清华 Git 镜像：`git+https://mirrors.tuna.tsinghua.edu.cn/git/home-manager.git?ref=release-24.11`。
+- sudo 配置：主用户（`username`）执行 sudo 无需密码，wheel 组其他用户需要密码。
+- Nix 二进制缓存优先级：`https://cache.nixos.org`（官方）> `https://nix-community.cachix.org` > 国内镜像（中科大、清华）。
+- `nixpkgs` 和 `home-manager` 的 flake 输入使用 GitHub 官方源。中国大陆用户如需使用清华镜像，可参考 `flake.nix` 中的注释说明。
 
 ## 日常操作
 
@@ -159,9 +162,10 @@ nix flake show
 
 ## 2G 内存 VPS 建议
 
-- 本仓库已在 `modules/nixos/base.nix` 里限制 Nix 构建并发：`max-jobs = 1`、`cores = 1`。
+- 本仓库已在 `modules/nixos/base.nix` 里完全禁止本地编译：`max-jobs = 0`、`cores = 1`。
 - 已设置 `fallback = false`：如果缓存没有命中会直接失败，避免 VPS 源码编译导致卡死。
 - 已配置 zram + 4G swapfile，降低内存峰值时 OOM 风险。
+- **注意**: `max-jobs = 0` 会禁止任何本地构建。如果 `nixos-rebuild` 报错 `Unable to start any build`，说明有包缺少缓存，可临时改为 `max-jobs = 1` 或切换到官方源重试。
 
 排障命令（在 VPS 上执行）：
 

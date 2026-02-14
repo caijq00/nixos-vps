@@ -19,15 +19,19 @@
     settings = {
       experimental-features = [ "nix-command" "flakes" ];
       auto-optimise-store = true;
-      max-jobs = 1;
+      # 完全禁止本地编译(max-jobs = 0)
+      # 警告: 这会禁止任何本地构建,包括系统配置组装
+      # 如果缓存未命中会直接失败,确保所有包都有二进制缓存
+      # 若 rebuild 报错 "Unable to start any build",改为 max-jobs = 1
+      max-jobs = 0;
       cores = 1;
       fallback = false;
       trusted-users = [ "root" "@wheel" ];
       substituters = [
         "https://cache.nixos.org"
+        "https://nix-community.cachix.org"
         "https://mirrors.ustc.edu.cn/nix-channels/store"
         "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
-        "https://nix-community.cachix.org"
       ];
       trusted-public-keys = [
         "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
@@ -50,6 +54,7 @@
     RUSTUP_DIST_SERVER = "https://mirrors.tuna.tsinghua.edu.cn/rustup";
     RUSTUP_UPDATE_ROOT = "https://mirrors.tuna.tsinghua.edu.cn/rustup/rustup";
   };
+  environment.localBinInPath = true;
 
   # Allow running foreign dynamically linked binaries (e.g. Volta-managed Node.js).
   programs.nix-ld = {

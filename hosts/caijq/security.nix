@@ -21,6 +21,7 @@
     allowedTCPPorts = [ 9527 80 443 ];
   };
 
+  # sudo 配置: wheel 组默认需要密码,但为主用户配置免密 sudo
   security.sudo = {
     wheelNeedsPassword = true;
     extraRules = [
