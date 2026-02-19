@@ -16,5 +16,5 @@
   boot.loader.grub.enable = true;
   boot.loader.grub.devices = [ "/dev/vda" ];
 
-  system.stateVersion = "25.11";
+  system.stateVersion = "24.11";
 }
