@@ -81,6 +81,18 @@ sudo nixos-generate-config --show-hardware-config \
   | sudo tee hosts/caijq/hardware-configuration.nix > /dev/null
 ```
 
+生成配置后，如果需要排除国内镜像缺包问题，可先用“官方缓存优先”做一次构建验证：
+
+```bash
+sudo nix --extra-experimental-features "nix-command flakes" build \
+  .#nixosConfigurations.caijq.config.system.build.toplevel \
+  --no-link -L \
+  --option max-jobs 1 \
+  --option cores 1 \
+  --option fallback false \
+  --option substituters https://cache.nixos.org
+```
+
 4. 本地检查：
 
 ```bash
@@ -255,19 +267,7 @@ sudo nix --extra-experimental-features "nix-command flakes" build \
 
 说明：`max-jobs = 0` 会禁止任何本地 build。若直接报 `Unable to start any build`，说明当前目标存在本地组装步骤；此时用 `max-jobs = 1` 继续，并保持 `fallback = false` 防止回退源码编译大包。
 
-3. 强制只用官方缓存（排除镜像缺包问题）
-
-```bash
-sudo nix --extra-experimental-features "nix-command flakes" build \
-  .#nixosConfigurations.caijq.config.system.build.toplevel \
-  --no-link -L \
-  --option max-jobs 1 \
-  --option cores 1 \
-  --option fallback false \
-  --option substituters https://cache.nixos.org
-```
-
-4. 固定依赖版本（提升缓存命中稳定性）
+3. 固定依赖版本（提升缓存命中稳定性）
 
 ```bash
 cd /etc/nixos/nixos-vps
@@ -276,7 +276,7 @@ git add flake.lock
 git commit -m "chore: lock flake inputs"
 ```
 
-5. 查看当前生效的 Nix 配置
+4. 查看当前生效的 Nix 配置
 
 ```bash
 grep -E "max-jobs|cores|fallback|substituters" /etc/nix/nix.conf
