@@ -25,6 +25,7 @@
 
       export VOLTA_HOME="$HOME/.volta"
       export PATH="$VOLTA_HOME/bin:$PATH"
+      export PATH="$HOME/.cargo/bin:$PATH"
 
       # Use Up/Down to search history by current command prefix and keep cursor at line end.
       autoload -Uz history-search-end
@@ -53,8 +54,9 @@
       c = "clear";
       cc = "claude";
       cx = "codex";
-      ra = "ranger";
+      ra = "sudo ranger";
       ll = "eza -al --icons";
+      la = "eza -a --icons";
       gs = "git status";
       cat = "bat";
       vi = "nvim";
