@@ -37,7 +37,7 @@ nixos-vps/
 
 - 基础工具：`vim` `git` `curl` `wget` `tmux` `htop` `jq` `ripgrep` `fd` `bat` `eza`
 - 运维工具：`lsof` `strace` `iotop-c` `iftop` `sysstat` `ethtool` `nix-tree` `nix-output-monitor`
-- 开发运行时：`python3` `uv` `rustup` `rust-analyzer` `volta` `bun`
+- 开发运行时：`python3` `uv` `rustc` `cargo` `rust-analyzer` `gcc` `pkg-config` `cmake` `openssl` `zlib` `volta` `bun`
 - AI CLI：`claude` `qwen`（由 `bun` 全局安装并通过系统 wrapper 暴露命令）
 - 系统服务：`nginx`（默认监听 80，返回 `nginx is running`）
 
@@ -170,6 +170,36 @@ sudo nixos-rebuild switch --flake .#caijq
 
 ```bash
 nix flake show
+```
+
+- 查看系统历史版本（generations）：
+
+```bash
+sudo nix-env -p /nix/var/nix/profiles/system --list-generations
+```
+
+- 临时回滚到上一代（立即切换）：
+
+```bash
+sudo nixos-rebuild switch --rollback
+```
+
+- 回滚到指定 generation（例如 123）：
+
+```bash
+sudo /nix/var/nix/profiles/system-123-link/bin/switch-to-configuration switch
+```
+
+- 将指定 generation 设为下次开机默认（例如 123）：
+
+```bash
+sudo nix-env -p /nix/var/nix/profiles/system --switch-generation 123
+```
+
+- 清除所有旧版本（删除旧 generations，仅保留当前）：
+
+```bash
+sudo nix-collect-garbage -d
 ```
 
 ## 2G 内存 VPS 建议

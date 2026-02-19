@@ -80,8 +80,6 @@ in
   environment.variables = {
     EDITOR = "nvim";
     VISUAL = "nvim";
-    RUSTUP_DIST_SERVER = "https://mirrors.tuna.tsinghua.edu.cn/rustup";
-    RUSTUP_UPDATE_ROOT = "https://mirrors.tuna.tsinghua.edu.cn/rustup/rustup";
   };
   environment.localBinInPath = true;
 
@@ -113,8 +111,15 @@ in
     volta
     ranger
     yazi
-    rustup
+    rustc
+    cargo
     rust-analyzer
+    gcc
+    gnumake
+    pkg-config
+    cmake
+    openssl
+    zlib
     python3
     uv
     bun
