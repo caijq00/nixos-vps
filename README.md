@@ -1,6 +1,6 @@
 # NixOS VPS 配置（Flake + Home Manager）
 
-[![NixOS](https://img.shields.io/badge/NixOS-24.11-5277C3?logo=nixos&logoColor=white)](https://nixos.org)
+[![NixOS](https://img.shields.io/badge/NixOS-25.11-5277C3?logo=nixos&logoColor=white)](https://nixos.org)
 [![Flakes](https://img.shields.io/badge/Nix-Flakes-4E9A06)](https://nixos.wiki/wiki/Flakes)
 [![Home%20Manager](https://img.shields.io/badge/Home--Manager-enabled-1F6FEB)](https://github.com/nix-community/home-manager)
 [![License](https://img.shields.io/github/license/caijq00/nixos-vps)](https://github.com/caijq00/nixos-vps)
