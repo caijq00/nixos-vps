@@ -9,6 +9,10 @@
     ../../modules/nixos/shell.nix
     ../../modules/nixos/docker.nix
     ../../modules/nixos/incus.nix
+    ../../modules/nixos/sing-box.nix
+    ../../modules/nixos/emby.nix
+    ../../modules/nixos/plex.nix
+    ../../modules/nixos/immich.nix
   ];
 
   networking.hostName = hostName;
