@@ -10,8 +10,10 @@
 
   networking.nftables.enable = true;
 
-  networking.nftables.ruleset = ''
-    table ip nat {
+  # Add a dedicated NAT table for Plex remap without replacing global nftables rules.
+  networking.nftables.tables."plex-nat" = {
+    family = "ip";
+    content = ''
       chain prerouting {
         type nat hook prerouting priority dstnat; policy accept;
         tcp dport 32456 dnat to 127.0.0.1:32400
@@ -20,6 +22,6 @@
         type nat hook output priority -100; policy accept;
         tcp dport 32456 dnat to 127.0.0.1:32400
       }
-    }
-  '';
+    '';
+  };
 }
