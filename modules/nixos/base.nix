@@ -154,7 +154,7 @@ in
     };
   };
 
-  networking.firewall.allowedTCPPorts = [ 80 ];
+  # Note: Port 80 is opened by networking.firewall in security.nix
 
   # Install CLI agents via bun during nixos-rebuild activation.
   system.activationScripts.bunGlobalAgents.text = ''

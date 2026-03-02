@@ -10,7 +10,7 @@
       };
       ${username} = {
         isNormalUser = true;
-        extraGroups = [ "wheel" "docker" "incus-admin" ];
+        extraGroups = [ "wheel" "docker" ];
         shell = pkgs.zsh;
         home = "/home/${username}";
         initialPassword = "change-me";

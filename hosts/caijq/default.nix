@@ -8,9 +8,9 @@
     ./security.nix
     ../../modules/nixos/shell.nix
     ../../modules/nixos/docker.nix
-    ../../modules/nixos/incus.nix
+    # ../../modules/nixos/incus.nix
     ../../modules/nixos/sing-box.nix
-    ../../modules/nixos/emby.nix
+    # ../../modules/nixos/emby.nix
     ../../modules/nixos/plex.nix
     ../../modules/nixos/immich.nix
   ];
@@ -20,5 +20,5 @@
   boot.loader.grub.enable = true;
   boot.loader.grub.devices = [ "/dev/vda" ];
 
-  system.stateVersion = "25.11";
+  system.stateVersion = "24.11";
 }

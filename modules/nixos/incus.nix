@@ -52,9 +52,6 @@ in
     };
   };
 
-  networking.nftables.enable = true;
-  networking.firewall.trustedInterfaces = [ "incusbr0" ];
-
   users.users.${username}.extraGroups = [ "incus-admin" ];
 
   # Keep Incus image remotes pinned to TUNA mirror after rebuild/reboot.

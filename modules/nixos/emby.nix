@@ -40,7 +40,7 @@ in
     };
   };
 
-  networking.firewall.allowedTCPPorts = [ 8096 8920 ];
+  # Note: Emby ports (8096, 8920) need to be added to networking.firewall in security.nix if enabled
 
   environment.systemPackages = [ embyPkg ];
 }

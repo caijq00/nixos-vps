@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 
 {
   virtualisation.docker = {
@@ -25,6 +25,7 @@
       registry-mirrors = [
         "https://docker.1ms.run"
       ];
+
     };
   };
 
