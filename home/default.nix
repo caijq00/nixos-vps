@@ -24,7 +24,7 @@
       fi
 
       export VOLTA_HOME="$HOME/.volta"
-      export PATH="$VOLTA_HOME/bin:${pkgs.volta}/bin:/run/current-system/sw/bin:$PATH"
+      export PATH="$VOLTA_HOME/bin:$PATH"
       export PATH="$HOME/.cargo/bin:$PATH"
 
       # Use Up/Down to search history by current command prefix and keep cursor at line end.
@@ -107,7 +107,7 @@
   # Ensure Volta tools are present after each Home Manager activation.
   home.activation.installVoltaLatestTools = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     export VOLTA_HOME="$HOME/.volta"
-    export PATH="$VOLTA_HOME/bin:${pkgs.volta}/bin:/run/current-system/sw/bin:$PATH"
+    export PATH="$VOLTA_HOME/bin:$PATH"
     export VOLTA_LOGLEVEL=error
 
     $DRY_RUN_CMD ${pkgs.volta}/bin/volta install node@latest
