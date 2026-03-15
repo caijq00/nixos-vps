@@ -1,35 +1,4 @@
-{ lib, pkgs, ... }:
-let
-  claudeWrapper = pkgs.writeShellScriptBin "claude" ''
-    if [ ! -x /var/lib/bun-global/bin/claude ]; then
-      echo "claude is not installed yet. Run: nixos-rebuild switch" >&2
-      exit 127
-    fi
-    exec /var/lib/bun-global/bin/claude "$@"
-  '';
-
-  qwenWrapper = pkgs.writeShellScriptBin "qwen" ''
-    if [ -x /var/lib/bun-global/bin/qwen ]; then
-      exec /var/lib/bun-global/bin/qwen "$@"
-    fi
-    if [ -x /var/lib/bun-global/bin/qwen-code ]; then
-      exec /var/lib/bun-global/bin/qwen-code "$@"
-    fi
-    echo "qwen is not installed yet. Run: nixos-rebuild switch" >&2
-    exit 127
-  '';
-
-  qwenCodeWrapper = pkgs.writeShellScriptBin "qwen-code" ''
-    if [ -x /var/lib/bun-global/bin/qwen-code ]; then
-      exec /var/lib/bun-global/bin/qwen-code "$@"
-    fi
-    if [ -x /var/lib/bun-global/bin/qwen ]; then
-      exec /var/lib/bun-global/bin/qwen "$@"
-    fi
-    echo "qwen-code is not installed yet. Run: nixos-rebuild switch" >&2
-    exit 127
-  '';
-in
+{ pkgs, ... }:
 {
   nixpkgs.config.allowUnfree = true;
 
@@ -140,10 +109,6 @@ in
     nix-tree
     zoxide
     fastfetch
-  ] ++ [
-    claudeWrapper
-    qwenWrapper
-    qwenCodeWrapper
   ];
 
   services.nginx = {
@@ -163,18 +128,60 @@ in
 
   # Note: Port 80 is opened by networking.firewall in security.nix
 
-  # Install CLI agents via bun during nixos-rebuild activation.
-  system.activationScripts.bunGlobalAgents.text = ''
-    set -euo pipefail
-
-    mkdir -p /var/lib/bun-global /var/lib/bun-cache
-
-    export BUN_INSTALL=/var/lib/bun-global
-    export BUN_INSTALL_CACHE_DIR=/var/lib/bun-cache
-    export PATH="$BUN_INSTALL/bin:$PATH"
-
-    ${pkgs.bun}/bin/bun add -g @anthropic-ai/claude-code @qwen-code/qwen-code
-  '';
+  # Deprecated: bun-based global agent install and wrappers.
+  # Keep this block commented for reference; current install path is user-level
+  # Volta install in home/default.nix (Claude/Codex/qwen).
+  #
+  # let
+  #   claudeWrapper = pkgs.writeShellScriptBin "claude" ''
+  #     if [ ! -x /var/lib/bun-global/bin/claude ]; then
+  #       echo "claude is not installed yet. Run: nixos-rebuild switch" >&2
+  #       exit 127
+  #     fi
+  #     exec /var/lib/bun-global/bin/claude "$@"
+  #   '';
+  #
+  #   qwenWrapper = pkgs.writeShellScriptBin "qwen" ''
+  #     if [ -x /var/lib/bun-global/bin/qwen ]; then
+  #       exec /var/lib/bun-global/bin/qwen "$@"
+  #     fi
+  #     if [ -x /var/lib/bun-global/bin/qwen-code ]; then
+  #       exec /var/lib/bun-global/bin/qwen-code "$@"
+  #     fi
+  #     echo "qwen is not installed yet. Run: nixos-rebuild switch" >&2
+  #     exit 127
+  #   '';
+  #
+  #   qwenCodeWrapper = pkgs.writeShellScriptBin "qwen-code" ''
+  #     if [ -x /var/lib/bun-global/bin/qwen-code ]; then
+  #       exec /var/lib/bun-global/bin/qwen-code "$@"
+  #     fi
+  #     if [ -x /var/lib/bun-global/bin/qwen ]; then
+  #       exec /var/lib/bun-global/bin/qwen "$@"
+  #     fi
+  #     echo "qwen-code is not installed yet. Run: nixos-rebuild switch" >&2
+  #     exit 127
+  #   '';
+  #
+  # in {
+  #   environment.systemPackages = with pkgs; [ ] ++ [
+  #     claudeWrapper
+  #     qwenWrapper
+  #     qwenCodeWrapper
+  #   ];
+  #
+  #   system.activationScripts.bunGlobalAgents.text = ''
+  #     set -euo pipefail
+  #
+  #     mkdir -p /var/lib/bun-global /var/lib/bun-cache
+  #
+  #     export BUN_INSTALL=/var/lib/bun-global
+  #     export BUN_INSTALL_CACHE_DIR=/var/lib/bun-cache
+  #     export PATH="$BUN_INSTALL/bin:$PATH"
+  #
+  #     ${pkgs.bun}/bin/bun add -g @anthropic-ai/claude-code @qwen-code/qwen-code
+  #   '';
+  # }
 
   zramSwap = {
     enable = true;

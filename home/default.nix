@@ -1,4 +1,4 @@
-{ pkgs, username, hostName, ... }:
+{ pkgs, lib, username, hostName, ... }:
 
 {
   home.username = username;
@@ -24,7 +24,7 @@
       fi
 
       export VOLTA_HOME="$HOME/.volta"
-      export PATH="$VOLTA_HOME/bin:$PATH"
+      export PATH="$VOLTA_HOME/bin:${pkgs.volta}/bin:/run/current-system/sw/bin:$PATH"
       export PATH="$HOME/.cargo/bin:$PATH"
 
       # Use Up/Down to search history by current command prefix and keep cursor at line end.
@@ -98,6 +98,19 @@
     [[index]]
     url = "https://pypi.tuna.tsinghua.edu.cn/simple"
     default = true
+  '';
+
+  # Ensure Volta tools are present after each Home Manager activation.
+  home.activation.installVoltaLatestTools = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    export VOLTA_HOME="$HOME/.volta"
+    export PATH="$VOLTA_HOME/bin:${pkgs.volta}/bin:/run/current-system/sw/bin:$PATH"
+
+    if command -v volta >/dev/null 2>&1; then
+      $DRY_RUN_CMD volta install node@latest
+      $DRY_RUN_CMD volta install @anthropic-ai/claude-code@latest
+      $DRY_RUN_CMD volta install @openai/codex@latest
+      $DRY_RUN_CMD volta install @qwen-code/qwen-code@latest
+    fi
   '';
 
   home.packages = with pkgs; [
