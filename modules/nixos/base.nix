@@ -80,6 +80,13 @@ in
   environment.variables = {
     EDITOR = "nvim";
     VISUAL = "nvim";
+    # DeepSeek API for Claude Code
+    ANTHROPIC_BASE_URL = "https://api.deepseek.com/anthropic";
+    API_TIMEOUT_MS = "600000";
+    ANTHROPIC_MODEL = "deepseek-chat";
+    ANTHROPIC_SMALL_FAST_MODEL = "deepseek-chat";
+    CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = "1";
+    ANTHROPIC_AUTH_TOKEN = "sk-";
   };
   environment.localBinInPath = true;
 
