@@ -20,7 +20,7 @@
   networking.firewall = lib.mkForce {
     enable = true;
     allowPing = true;
-    allowedTCPPorts = [ 80 443 9527 2283 32400 32456 ];
+    allowedTCPPorts = [ 80 443 9527 2283 5001 32400 32456 ];
     trustedInterfaces = [ "docker0" ];
     # Keep Plex external port 32456 mapped to local 32400.
     extraCommands = ''

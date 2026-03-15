@@ -44,7 +44,7 @@ in
     virtualisation.oci-containers.containers.dockge = {
       image = "louislam/dockge:latest";
       autoStart = true;
-      extraOptions = [ "--network=host" ];
+      ports = [ "${toString cfg.port}:5001" ];
       volumes = [
         "/var/run/docker.sock:/var/run/docker.sock"
         "${cfg.stacksDir}:/opt/stacks"
