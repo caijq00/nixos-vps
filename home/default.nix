@@ -82,6 +82,10 @@
     enableZshIntegration = false;
   };
 
+  home.sessionPath = [
+    "$HOME/.volta/bin"
+  ];
+
   home.file.".cargo/config.toml".text = ''
     [source.crates-io]
     replace-with = "tuna"
@@ -104,13 +108,12 @@
   home.activation.installVoltaLatestTools = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     export VOLTA_HOME="$HOME/.volta"
     export PATH="$VOLTA_HOME/bin:${pkgs.volta}/bin:/run/current-system/sw/bin:$PATH"
+    export VOLTA_LOGLEVEL=error
 
-    if command -v volta >/dev/null 2>&1; then
-      $DRY_RUN_CMD volta install node@latest
-      $DRY_RUN_CMD volta install @anthropic-ai/claude-code@latest
-      $DRY_RUN_CMD volta install @openai/codex@latest
-      $DRY_RUN_CMD volta install @qwen-code/qwen-code@latest
-    fi
+    $DRY_RUN_CMD ${pkgs.volta}/bin/volta install node@latest
+    $DRY_RUN_CMD ${pkgs.volta}/bin/volta install @anthropic-ai/claude-code@latest
+    $DRY_RUN_CMD ${pkgs.volta}/bin/volta install @openai/codex@latest
+    $DRY_RUN_CMD ${pkgs.volta}/bin/volta install @qwen-code/qwen-code@latest
   '';
 
   home.packages = with pkgs; [
